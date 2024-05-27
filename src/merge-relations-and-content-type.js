@@ -1,11 +1,10 @@
+const { ContentTypeHeader, ContentTypeFooter } = require('./merge-headers-and-footers');
 
 var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 
 
-var mergeContentTypes = function(files, _contentTypes) {
-
-
+var mergeContentTypes = function(files, _contentTypes, _mergeAsSections) {
     files.forEach(function(zip) {
         // var zip = new JSZip(file);
         var xmlString = zip.file("[Content_Types].xml").asText();
@@ -16,8 +15,13 @@ var mergeContentTypes = function(files, _contentTypes) {
         for (var node in childNodes) {
             if (/^\d+$/.test(node) && childNodes[node].getAttribute) {
                 var contentType = childNodes[node].getAttribute('ContentType');
-                if (!_contentTypes[contentType])
+                if (_mergeAsSections && (contentType === ContentTypeHeader || contentType === ContentTypeFooter)) {
+                    const partName = childNodes[node].getAttribute('PartName');
+                    _contentTypes[`${partName}__${contentType}`] = childNodes[node].cloneNode(true);
+                } else if (!_contentTypes[contentType]) {
+                    // TODO: contentType is same for footers/headers in all documents
                     _contentTypes[contentType] = childNodes[node].cloneNode();
+                }
             }
         }
 
