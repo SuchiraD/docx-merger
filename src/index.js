@@ -50,37 +50,52 @@ function DocxMerger(options, files) {
 
         var self = this;
         this._builder = this._body;
-
+        let maxRelId;
         if (this._mergeAsSections) {
-            prepareHeaderFooterRelations(files, this._headersAndFooters);
+            maxRelId = prepareHeaderFooterRelations(files, this._headersAndFooters);
         }
         
         RelContentType.mergeContentTypes(files, this._contentTypes, this._mergeAsSections);
-        Media.prepareMediaFiles(files, this._media);
+        
+        if (this._mergeAsSections) {
+            maxRelId = Media.prepareMediaFiles2(files, maxRelId, this._media);
+        } else {
+            Media.prepareMediaFiles(files, this._media);
+        }
+
         RelContentType.mergeRelations(files, this._rel);
 
         bulletsNumbering.prepareNumbering(files);
         bulletsNumbering.mergeNumbering(files, this._numbering);
 
-        Style.prepareStyles(files, this._style);
-        Style.mergeStyles(files, this._style);
+        if (this._mergeAsSections) {
+            Style.mergeStyles2(files, this._style);
+        } else {
+            Style.prepareStyles(files, this._style);
+            Style.mergeStyles(files, this._style);
+        }
 
         files.forEach(function(zip, index) {
             //var zip = new JSZip(file);
-            var xmlString = zip.file("word/document.xml").asText();
-            var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
+            let xmlString = zip.file("word/document.xml").asText();
+            const xml = new DOMParser().parseFromString(xmlString, 'text/xml');
 
             if (self._mergeAsSections) {
                 const childNodesCount = xml.documentElement.childNodes[0].childNodes.length;
                 
                 if (index < files.length-1) {
                     const sectionBreak = xml.documentElement.childNodes[0].childNodes[childNodesCount - 1];
+                    // TODO: differ section headers and footers continuity
+                    
                     xml.documentElement.childNodes[0].removeChild(sectionBreak);
                     const lastWPTag = xml.documentElement.childNodes[0].childNodes[childNodesCount - 2];
-                    const wpPropertiesList = lastWPTag.getElementsByTagName('w:pPr');
-                    if (wpPropertiesList.length >= 1) {
-                        wpPropertiesList[0].appendChild(sectionBreak);
-                    } 
+                    let wpPropertiesList = lastWPTag.getElementsByTagName('w:pPr');
+                    if (wpPropertiesList.length < 1) {
+                        wpPropertiesList = [xml.createElement('w:pPr')];
+                        lastWPTag.appendChild(wpPropertiesList[0]);
+                    }
+
+                    wpPropertiesList[0].appendChild(sectionBreak);
                 }
                 
                 let serializer = new XMLSerializer();
@@ -111,10 +126,9 @@ function DocxMerger(options, files) {
     };
 
     this.save = function(type, callback) {
-
         var zip = this._files[0];
 
-        var xml = zip.file("word/document.xml").asText();
+        let xml = zip.file("word/document.xml").asText();
 
         if (this._mergeAsSections) {
             xml = new DOMParser().parseFromString(xml, 'text/xml');
@@ -126,10 +140,10 @@ function DocxMerger(options, files) {
             // xml.documentElement.childNodes[0].childNodes = this._body;
             copyHeaderAndFooterFiles(zip, this._files, this._headersAndFooters);
             RelContentType.generateContentTypes(zip, this._contentTypes);
-            Media.copyMediaFiles(zip, this._media, this._files);
+            Media.copyMediaFiles2(zip, this._media, this._files);
             RelContentType.generateRelations(zip, this._rel);
             bulletsNumbering.generateNumbering(zip, this._numbering);
-            Style.generateStyles(zip, this._style);
+            Style.generateStyles2(zip, this._style);
             
             let serializer = new XMLSerializer();
 

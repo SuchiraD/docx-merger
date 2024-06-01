@@ -1,6 +1,6 @@
-
 const XMLSerializer = require('xmldom').XMLSerializer;
 const DOMParser = require('xmldom').DOMParser;
+const { getMaxRelationID } = require('./util');
 
 const ContentTypeHeader = 'application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml';
 const ContentTypeFooter = 'application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml';
@@ -37,30 +37,6 @@ const getMaxHeaderFooterCount = (zip) => {
     return { headerCount, footerCount };
 }
 
-const getMaxRelationID = (zip, xml) => {
-    if (zip) {
-        let xmlString = zip.file("word/_rels/document.xml.rels").asText();
-        xml = new DOMParser().parseFromString(xmlString, 'text/xml');
-    }
-
-    const childNodes = xml.getElementsByTagName('Relationships')[0].childNodes;
-
-    let maxId = 0;
-    for(var node in childNodes) {
-        if (/^\d+$/.test(node) && childNodes[node].getAttribute) {
-            var relID = childNodes[node].getAttribute('Id');
-            const matches = relID.match(/(\d+)/);
-            if (matches) {
-                matches.forEach((match) => {
-                    maxId = Math.max(maxId, Number(match))
-                });
-            }
-        }
-    }
-
-    return maxId;
-}
-
 const prepareHeaderFooterRelations = (files, _headersAndFooters) => {
     if (files.length <= 1) {
         return;
@@ -79,6 +55,8 @@ const prepareHeaderFooterRelations = (files, _headersAndFooters) => {
         renameHeaderAndFooterFiles(files[i], headersAndFooters);
         _headersAndFooters[i] = headersAndFooters;
     }
+
+    return maxRelId;
 };
 
 const updateHeaderFooterContentTypes = (zip, fileIndex, hfCount, headersAndFooters) => {
@@ -201,6 +179,7 @@ const replaceHeaderFooterIdInXml = (node, oldId, newId) => {
 
 const renameHeaderAndFooterFiles = (zip, headersAndFooters) => {
     let files = zip.folder("word").files;
+    const relationsFolder = 'word/_rels';
     for (var file in files) {
         const index = findInArray(headersAndFooters, 'oldTarget', file.substring(5));
         if (index < 0) {
@@ -208,8 +187,15 @@ const renameHeaderAndFooterFiles = (zip, headersAndFooters) => {
         }
 
         headersAndFooters[index].location = `word/${headersAndFooters[index].newTarget}`;
-        const fileContent = zip.file(file).asUint8Array();
+        let fileContent = zip.file(file).asUint8Array();
         zip.file(headersAndFooters[index].location, fileContent);
+
+        const relFile = zip.file(`${relationsFolder}/${headersAndFooters[index].oldTarget}.rels`);
+        if (relFile) {
+            fileContent = relFile.asUint8Array();
+            headersAndFooters[index].relLocation = `${relationsFolder}/${headersAndFooters[index].newTarget}.rels`;
+            zip.file(headersAndFooters[index].relLocation, fileContent);
+        }
     }
 };
 
@@ -217,8 +203,13 @@ const copyHeaderAndFooterFiles = (baseZip, _zipFiles, _headersAndFooters) => {
     for (var zipFileIndex in _headersAndFooters) {
         for (let i = 0; i < _headersAndFooters[zipFileIndex].length; i++) {
             const location = _headersAndFooters[zipFileIndex][i].location;
-            const content = _zipFiles[zipFileIndex].file(location).asUint8Array();
+            let content = _zipFiles[zipFileIndex].file(location).asUint8Array();
             baseZip.file(location, content);
+
+            if (_headersAndFooters[zipFileIndex][i].relLocation) {
+                content = _zipFiles[zipFileIndex].file(_headersAndFooters[zipFileIndex][i].relLocation).asUint8Array();
+                baseZip.file(_headersAndFooters[zipFileIndex][i].relLocation, content);
+            }
         }
     }
 };

@@ -10,11 +10,17 @@ Javascript Library for Merging Docx file in NodeJS and Browser Environment.
 
 ## Table of Contents
 
-  1. [Installation](#installation)
-  1. [Usage Nodejs](#usage-nodejs)
-  1. [Usage Browser](#usage-browser)
-  1. [TODO](#todo)
-  1. [Known Issues](#known-issues)
+- [Docx-merger](#docx-merger)
+  - [Purpose](#purpose)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Usage Nodejs](#usage-nodejs)
+    - [Usage Browser](#usage-browser)
+          - [Using Callback](#using-callback)
+          - [Using Promise](#using-promise)
+    - [TODO](#todo)
+    - [Known Issues](#known-issues)
+    - [New additions](#new-additions)
 
 
 ## Installation
@@ -145,5 +151,12 @@ Mandatory in IE 6, 7, 8 and 9.
 ### Known Issues
 
   - Microsoft Word in windows Shows some error due to numbering.
+
+### New additions
+- merge as sections
+- preserve headers/footers
+- if there is no footer/header in the last document being merged, previous footer may apply. 
+- styles with same name as in first document will be ignored. Styles with different names will be merged
+- The first document's theme will be applied to final document
 
   **[Back to top](#table-of-contents)**

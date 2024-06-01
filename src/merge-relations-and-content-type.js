@@ -37,11 +37,12 @@ var mergeRelations = function(files, _rel) {
 
         var childNodes = xml.getElementsByTagName('Relationships')[0].childNodes;
 
+        // should only be taking files that need to be copied from other docx
         for (var node in childNodes) {
             if (/^\d+$/.test(node) && childNodes[node].getAttribute) {
-                var Id = childNodes[node].getAttribute('Id');
-                if (!_rel[Id])
-                    _rel[Id] = childNodes[node].cloneNode();
+                const target = childNodes[node].getAttribute('Target');
+                if (!_rel[target])
+                    _rel[target] = childNodes[node].cloneNode();
             }
         }
 

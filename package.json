@@ -37,6 +37,7 @@
   "author": "Apurv Ojas <apurvaojas10@gmail.com>",
   "dependencies": {
     "jszip": "^2.6.1",
+    "xml-js": "^1.6.11",
     "xmldom": "^0.1.27"
   },
   "bugs": {
