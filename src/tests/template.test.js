@@ -14,7 +14,7 @@ test('doc 1', () => {
 
     var docx = new DocxMerger({pageBreak: false, mergeAsSections: true},[file1,file2]);
 
-    const output = 'output_1.docx'
+    const output = 'output/output_1.docx'
     docx.save('nodebuffer',function (data) {
         fs.writeFile(output, data, function(err){/*...*/});
     });
@@ -34,7 +34,7 @@ test('doc 2', () => {
 
     var docx = new DocxMerger({pageBreak: false, mergeAsSections: true},[file1,file2, file3]);
 
-    const output = 'output_2.docx'
+    const output = 'output/output_2.docx'
     docx.save('nodebuffer',function (data) {
         fs.writeFile(output, data, function(err){/*...*/});
     });
@@ -54,7 +54,7 @@ test('doc 3', () => {
 
     var docx = new DocxMerger({pageBreak: false, mergeAsSections: true},[file1,file2, file3]);
 
-    const output = 'output_3.docx'
+    const output = 'output/output_3.docx'
     docx.save('nodebuffer',function (data) {
         fs.writeFile(output, data, function(err){/*...*/});
     });
@@ -74,7 +74,7 @@ test('doc 4', () => {
 
     var docx = new DocxMerger({pageBreak: false, mergeAsSections: true},[file1,file2, file3]);
 
-    const output = 'output_4.docx'
+    const output = 'output/output_4.docx'
     docx.save('nodebuffer',function (data) {
         fs.writeFile(output, data, function(err){/*...*/});
     });
@@ -94,7 +94,7 @@ test('doc 5', () => {
 
     var docx = new DocxMerger({pageBreak: false, mergeAsSections: true},[file1,file2]);
 
-    const output = 'output_5.docx'
+    const output = 'output/output_5.docx'
     docx.save('nodebuffer',function (data) {
         fs.writeFile(output, data, function(err){/*...*/});
     });
