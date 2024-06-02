@@ -81,14 +81,15 @@ function DocxMerger(options, files) {
             const xml = new DOMParser().parseFromString(xmlString, 'text/xml');
 
             if (self._mergeAsSections) {
-                const childNodesCount = xml.documentElement.childNodes[0].childNodes.length;
+                const bodyElement = xml.documentElement.getElementsByTagName('w:body')[0];
+                const childNodesCount = bodyElement.childNodes.length;
 
                 if (index < files.length - 1) {
-                    const sectionBreak = xml.documentElement.childNodes[0].childNodes[childNodesCount - 1];
+                    const sectionBreak = bodyElement.childNodes[childNodesCount - 1];
                     // TODO: differ section headers and footers continuity
 
-                    xml.documentElement.childNodes[0].removeChild(sectionBreak);
-                    const lastWPTag = xml.documentElement.childNodes[0].childNodes[childNodesCount - 2];
+                    bodyElement.removeChild(sectionBreak);
+                    const lastWPTag = bodyElement.childNodes[childNodesCount - 2];
                     let wpPropertiesList = lastWPTag.getElementsByTagName('w:pPr');
                     if (wpPropertiesList.length < 1) {
                         wpPropertiesList = [xml.createElement('w:pPr')];
@@ -101,8 +102,8 @@ function DocxMerger(options, files) {
                 let serializer = new XMLSerializer();
                 // const s = serializer.serializeToString(xml.documentElement.childNodes[0].childNodes);
 
-                for (let i = 0; i < xml.documentElement.childNodes[0].childNodes.length; i++) {
-                    self.insertRaw(xml.documentElement.childNodes[0].childNodes[i]);
+                for (let i = 0; i < bodyElement.childNodes.length; i++) {
+                    self.insertRaw(bodyElement.childNodes[i]);
                 };
 
                 // const body = serializer.serializeToString(xml.documentElement.childNodes[0]);
@@ -130,11 +131,12 @@ function DocxMerger(options, files) {
 
         if (this._mergeAsSections) {
             xml = new DOMParser().parseFromString(xml, 'text/xml');
-            const clonedBody = xml.documentElement.childNodes[0].cloneNode();
+            const bodyNode = xml.documentElement.getElementsByTagName('w:body')[0];
+            const clonedBody = bodyNode.cloneNode();
             for (let elementI = 0; elementI < this._body.length; elementI++) {
                 clonedBody.appendChild(this._body[elementI]);
             }
-            xml.documentElement.replaceChild(clonedBody, xml.documentElement.childNodes[0]);
+            xml.documentElement.replaceChild(clonedBody, bodyNode);
             // xml.documentElement.childNodes[0].childNodes = this._body;
             copyHeaderAndFooterFiles(zip, this._files, this._headersAndFooters);
             RelContentType.generateContentTypes(zip, this._contentTypes);
