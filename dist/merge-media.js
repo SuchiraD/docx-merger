@@ -3,12 +3,11 @@ var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 const { getMaxRelationID } = require('./util');
 
+var prepareMediaFiles = function (files, media) {
 
-var prepareMediaFiles = function(files, media) {
+    var count = 1;
 
-       var count = 1;
-
-    files.forEach(function(zip, index) {
+    files.forEach(function (zip, index) {
         // var zip = new JSZip(file);
         var medFiles = zip.folder("word/media").files;
 
@@ -31,7 +30,7 @@ var prepareMediaFiles = function(files, media) {
     // this.updateRelation(files);
 };
 
-const prepareMediaFiles2 = function(files, maxRelId, _media) {
+const prepareMediaFiles2 = function (files, maxRelId, _media) {
     // let maxRelId = getMaxRelationID(files[0], null);
     for (let zipIdx = 1; zipIdx < files.length; zipIdx++) {
         let zipMedia = _media[zipIdx];
@@ -47,7 +46,7 @@ const prepareMediaFiles2 = function(files, maxRelId, _media) {
     return maxRelId;
 };
 
-var updateMediaRelations = function(zip, count, _media) {
+var updateMediaRelations = function (zip, count, _media) {
 
     var xmlString = zip.file("word/_rels/document.xml.rels").asText();
     var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
@@ -78,7 +77,7 @@ var updateMediaRelations = function(zip, count, _media) {
     // console.log( xmlString );
 };
 
-var updateMediaRelations2 = function(zip, zipFileIdx, maxRelId, _media) {
+var updateMediaRelations2 = function (zip, zipFileIdx, maxRelId, _media) {
     const relFiles = zip.folder('word/_rels').files;
     const serializer = new XMLSerializer();
 
@@ -87,16 +86,16 @@ var updateMediaRelations2 = function(zip, zipFileIdx, maxRelId, _media) {
             // const file = relFiles[fileIndex];
             const xmlString = zip.file(file).asText();
             const xml = new DOMParser().parseFromString(xmlString, 'text/xml');
-            
+
             const shouldUpdateRels = file === 'word/_rels/document.xml.rels'; // relation-id will only be updated in document.xml. The reason is this is the only file that will be merged. Others will be copied
-    
+
             if (shouldUpdateRels) {
                 maxRelId = Math.max(maxRelId, getMaxRelationID(null, xml));
             }
-    
+
             const relationships = xml.getElementsByTagName('Relationships');
             if (relationships && relationships.length > 0) {
-                const childNodes = relationships[0].childNodes;        
+                const childNodes = relationships[0].childNodes;
                 for (let node in childNodes) {
                     if (/^\d+$/.test(node) && childNodes[node].getAttribute) {
                         let target = childNodes[node].getAttribute('Target');
@@ -109,12 +108,12 @@ var updateMediaRelations2 = function(zip, zipFileIdx, maxRelId, _media) {
                                 _media[target] = {
                                     oldTarget: target,
                                     newTarget: target.split('.').join(`_${zipFileIdx}.`),
-                                    fileIndex: zipFileIdx,
+                                    fileIndex: zipFileIdx
                                 };
                             }
-        
+
                             // relation-id will only be updated in document.xml
-                            if (shouldUpdateRels) { 
+                            if (shouldUpdateRels) {
                                 _media[target].oldRelID = childNodes[node].getAttribute('Id');
                                 _media[target].newRelID = `rId${++maxRelId}`;
                                 childNodes[node].setAttribute('Id', _media[target].newRelID);
@@ -123,7 +122,7 @@ var updateMediaRelations2 = function(zip, zipFileIdx, maxRelId, _media) {
                         }
                     }
                 }
-        
+
                 zip.file(file, serializer.serializeToString(xml));
             }
         }
@@ -132,7 +131,7 @@ var updateMediaRelations2 = function(zip, zipFileIdx, maxRelId, _media) {
     return maxRelId;
 };
 
-const updateMediaContent2 = function(zip, _media) {
+const updateMediaContent2 = function (zip, _media) {
     let xmlString = zip.file('word/document.xml').asText();
 
     for (let mediaTarget in _media) {
@@ -144,7 +143,7 @@ const updateMediaContent2 = function(zip, _media) {
     zip.file("word/document.xml", xmlString);
 };
 
-var updateMediaContent = function(zip, count, _media) {
+var updateMediaContent = function (zip, count, _media) {
 
     var xmlString = zip.file("word/document.xml").asText();
     var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
@@ -154,7 +153,7 @@ var updateMediaContent = function(zip, count, _media) {
     zip.file("word/document.xml", xmlString);
 };
 
-var copyMediaFiles = function(base, _media, _files) {
+var copyMediaFiles = function (base, _media, _files) {
 
     for (var media in _media) {
         var content = _files[_media[media].fileIndex].file(_media[media].oldTarget).asUint8Array();
@@ -163,7 +162,7 @@ var copyMediaFiles = function(base, _media, _files) {
     }
 };
 
-const copyMediaFiles2 = function(base, _media, _files) {
+const copyMediaFiles2 = function (base, _media, _files) {
     for (let fileIndex in _media) {
         const mediaFiles = _media[fileIndex];
         for (let medFile in mediaFiles) {
@@ -179,5 +178,5 @@ module.exports = {
     updateMediaContent: updateMediaContent,
     copyMediaFiles: copyMediaFiles,
     prepareMediaFiles2,
-    copyMediaFiles2,
+    copyMediaFiles2
 };

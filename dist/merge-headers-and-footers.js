@@ -8,14 +8,14 @@ const ContentTypeFooter = 'application/vnd.openxmlformats-officedocument.wordpro
 const RelationshipTypeHeader = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/header';
 const RelationshipTypeFooter = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer';
 
-const getMaxHeaderFooterCount = (zip) => {
+const getMaxHeaderFooterCount = zip => {
     let xmlString = zip.file("[Content_Types].xml").asText();
     const xml = new DOMParser().parseFromString(xmlString, 'text/xml');
     const childNodes = xml.getElementsByTagName('Types')[0].childNodes;
 
     let headerCount = 0;
     let footerCount = 0;
-    for(var node in childNodes) {
+    for (var node in childNodes) {
         if (/^\d+$/.test(node) && childNodes[node].getAttribute) {
             var contentType = childNodes[node].getAttribute('ContentType');
             if (ContentTypeHeader === contentType) {
@@ -35,7 +35,7 @@ const getMaxHeaderFooterCount = (zip) => {
     }
 
     return { headerCount, footerCount };
-}
+};
 
 const prepareHeaderFooterRelations = (files, _headersAndFooters) => {
     if (files.length <= 1) {
@@ -44,7 +44,7 @@ const prepareHeaderFooterRelations = (files, _headersAndFooters) => {
 
     const hfCount = getMaxHeaderFooterCount(files[0]);
     let maxRelId = getMaxRelationID(files[0], null);
-    for(let i = 1; i < files.length; i++) {
+    for (let i = 1; i < files.length; i++) {
         const tempHFCount = getMaxHeaderFooterCount(files[i]);
         hfCount.headerCount = Math.max(hfCount.headerCount, tempHFCount.headerCount);
         hfCount.footerCount = Math.max(hfCount.footerCount, tempHFCount.footerCount);
@@ -64,7 +64,7 @@ const updateHeaderFooterContentTypes = (zip, fileIndex, hfCount, headersAndFoote
     var xml = new DOMParser().parseFromString(xmlString, 'text/xml');
     var childNodes = xml.getElementsByTagName('Types')[0].childNodes;
     let count = 0;
-    for(var node in childNodes) {
+    for (var node in childNodes) {
         if (/^\d+$/.test(node) && childNodes[node].getAttribute) {
             var contentType = childNodes[node].getAttribute('ContentType');
             if (ContentTypeHeader === contentType) {
@@ -103,7 +103,7 @@ const updateHeaderFooterContentTypes = (zip, fileIndex, hfCount, headersAndFoote
     zip.file("[Content_Types].xml", xmlString);
 };
 
-const updateHeaderAndFooterRelations = function(zip, headersAndFooters, currentMaxRelId) {
+const updateHeaderAndFooterRelations = function (zip, headersAndFooters, currentMaxRelId) {
     let xmlString = zip.file("word/_rels/document.xml.rels").asText();
     const xml = new DOMParser().parseFromString(xmlString, 'text/xml');
     let maxRelId = Math.max(currentMaxRelId, getMaxRelationID(null, xml));
@@ -120,7 +120,7 @@ const updateHeaderAndFooterRelations = function(zip, headersAndFooters, currentM
             if (index < 0) {
                 continue;
             }
-            
+
             headersAndFooters[index].oldRelId = childNodes[node].getAttribute('Id');
             headersAndFooters[index].newRelId = `rId${++maxRelId}`;
 
@@ -136,7 +136,7 @@ const updateHeaderAndFooterRelations = function(zip, headersAndFooters, currentM
     return maxRelId;
 };
 
-const updateHeaderAndFooterRelationsInDocument = function(zip, headersAndFooters) {
+const updateHeaderAndFooterRelationsInDocument = function (zip, headersAndFooters) {
     let xmlString = zip.file("word/document.xml").asText();
     let xml = new DOMParser().parseFromString(xmlString, 'text/xml');
 
@@ -149,7 +149,7 @@ const updateHeaderAndFooterRelationsInDocument = function(zip, headersAndFooters
 };
 
 const findInArray = (arr, field, searchString) => {
-    for(let i = 0; i< arr.length; i++) {
+    for (let i = 0; i < arr.length; i++) {
         if (arr[i][field] === searchString) {
             return i;
         }
@@ -159,7 +159,7 @@ const findInArray = (arr, field, searchString) => {
 };
 
 const replaceHeaderFooterIdInXml = (node, oldId, newId) => {
-    if (!node.childNodes || (node.childNodes.length && node.childNodes.length < 0)) {
+    if (!node.childNodes || node.childNodes.length && node.childNodes.length < 0) {
         return;
     }
 
@@ -218,5 +218,5 @@ module.exports = {
     ContentTypeHeader,
     ContentTypeFooter,
     prepareHeaderFooterRelations,
-    copyHeaderAndFooterFiles,
+    copyHeaderAndFooterFiles
 };

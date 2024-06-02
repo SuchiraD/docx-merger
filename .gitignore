@@ -2,7 +2,7 @@ node_modules/
 .idea/
 *.zip
 .vscode/
-dist/
+# dist/
 package-lock.json
 coverage/
 .DS_Store
